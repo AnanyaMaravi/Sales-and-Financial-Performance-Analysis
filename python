@@ -1,0 +1,224 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# 1. Load Dataset
+df = pd.read_csv("Sample_data.csv")
+
+print("Original Dataset:")
+print(df.head())
+
+print("\nDataset Shape:")
+print(df.shape)
+
+print("\nDataset Information:")
+print(df.info())
+
+# 2. Clean Column Names
+df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
+
+print("\nColumn Names:")
+print(df.columns)
+
+# 3. Check Duplicate Records
+print("\nDuplicate Records:")
+print(df.duplicated().sum())
+
+df = df.drop_duplicates()
+
+# 4. Convert Numeric Columns
+numeric_columns = [
+    "units_sold",
+    "manufacturing_price",
+    "sale_price",
+    "gross_sales",
+    "discounts",
+    "sales",
+    "cogs",
+    "profit",
+    "month_number",
+    "year"
+]
+
+for col in numeric_columns:
+    df[col] = pd.to_numeric(df[col], errors="coerce")
+
+# 5. Convert Date Column
+df["date"] = pd.to_datetime(df["date"], errors="coerce")
+
+# 6. Check Missing Values
+print("\nMissing Values Before Cleaning:")
+print(df.isnull().sum())
+
+# 7. Handle Missing Values
+categorical_columns = [
+    "segment",
+    "country",
+    "product",
+    "discount_band",
+    "month_name"
+]
+
+for col in categorical_columns:
+    df[col] = df[col].fillna("Unknown")
+
+for col in numeric_columns:
+    df[col] = df[col].fillna(df[col].median())
+
+# 8. Extract Month and Year from Date
+df["month_number"] = df["date"].dt.month.fillna(
+    df["month_number"]
+).astype(int)
+
+df["month_name"] = df["date"].dt.month_name().fillna(
+    df["month_name"]
+)
+
+df["year"] = df["date"].dt.year.fillna(
+    df["year"]
+).astype(int)
+
+# 9. Check Cleaned Dataset
+print("\nCleaned Dataset:")
+print(df.head())
+
+print("\nMissing Values After Cleaning:")
+print(df.isnull().sum())
+
+# 10. Save Cleaned Dataset
+df.to_csv("Sample_data.csv", index=False)
+
+print("\nCleaned Dataset Saved Successfully!")
+
+# 11. Basic Statistical Analysis
+print("\nStatistical Summary:")
+print(df.describe())
+
+# 12. Calculate Business Metrics
+total_sales = df["sales"].sum()
+total_profit = df["profit"].sum()
+total_units = df["units_sold"].sum()
+total_discounts = df["discounts"].sum()
+total_cogs = df["cogs"].sum()
+
+profit_margin = (total_profit / total_sales) * 100
+
+print("\nBusiness Performance:")
+print("Total Sales:", total_sales)
+print("Total Profit:", total_profit)
+print("Total Units Sold:", total_units)
+print("Total Discounts:", total_discounts)
+print("Total COGS:", total_cogs)
+print("Profit Margin:", round(profit_margin, 2), "%")
+
+# 13. Country Wise Sales
+country_sales = df.groupby("country")["sales"].sum()
+
+print("\nCountry Wise Sales:")
+print(country_sales)
+
+# 14. Product Wise Profit
+product_profit = df.groupby("product")["profit"].sum()
+
+print("\nProduct Wise Profit:")
+print(product_profit)
+
+# 15. Segment Wise Sales
+segment_sales = df.groupby("segment")["sales"].sum()
+
+print("\nSegment Wise Sales:")
+print(segment_sales)
+
+# 16. Monthly Sales
+monthly_sales = df.groupby("month_number")["sales"].sum()
+
+print("\nMonthly Sales:")
+print(monthly_sales)
+
+# 17. Year Wise Sales
+yearly_sales = df.groupby("year")["sales"].sum()
+
+print("\nYear Wise Sales:")
+print(yearly_sales)
+
+# 18. Discount Analysis
+discount_analysis = df.groupby("discount_band").agg({
+    "sales": "sum",
+    "profit": "sum",
+    "discounts": "sum"
+})
+
+print("\nDiscount Analysis:")
+print(discount_analysis)
+
+# 19. Chart 1 - Sales by Country
+plt.figure(figsize=(10, 6))
+country_sales.sort_values().plot(kind="bar")
+plt.title("Sales by Country")
+plt.xlabel("Country")
+plt.ylabel("Total Sales")
+plt.tight_layout()
+plt.savefig("charts.png")
+plt.show()
+
+# 20. Chart 2 - Profit by Product
+plt.figure(figsize=(10, 6))
+product_profit.sort_values().plot(kind="bar")
+plt.title("Profit by Product")
+plt.xlabel("Product")
+plt.ylabel("Total Profit")
+plt.tight_layout()
+plt.savefig("charts.png")
+plt.show()
+
+# 21. Chart 3 - Sales by Segment
+plt.figure(figsize=(8, 6))
+segment_sales.plot(kind="pie", autopct="%1.1f%%")
+plt.title("Sales by Segment")
+plt.ylabel("")
+plt.tight_layout()
+plt.savefig("charts.png")
+plt.show()
+
+# 22. Chart 4 - Monthly Sales Trend
+plt.figure(figsize=(10, 6))
+monthly_sales.plot(kind="line", marker="o")
+plt.title("Monthly Sales Trend")
+plt.xlabel("Month Number")
+plt.ylabel("Total Sales")
+plt.grid()
+plt.tight_layout()
+plt.savefig("charts.png")
+plt.show()
+
+# 23. Chart 5 - Profit by Discount Band
+plt.figure(figsize=(8, 6))
+discount_analysis["profit"].plot(kind="bar")
+plt.title("Profit by Discount Band")
+plt.xlabel("Discount Band")
+plt.ylabel("Total Profit")
+plt.tight_layout()
+plt.savefig("charts.png")
+plt.show()
+
+# 24. Chart 6 - Units Sold by Product
+units_product = df.groupby("product")["units_sold"].sum()
+
+plt.figure(figsize=(10, 6))
+units_product.plot(kind="bar")
+plt.title("Units Sold by Product")
+plt.xlabel("Product")
+plt.ylabel("Units Sold")
+plt.tight_layout()
+plt.savefig("charts.png")
+plt.show()
+
+# 25. Save Analysis Results
+country_sales.to_csv("charts/country_sales.csv")
+product_profit.to_csv("charts/product_profit.csv")
+segment_sales.to_csv("charts/segment_sales.csv")
+monthly_sales.to_csv("charts/monthly_sales.csv")
+yearly_sales.to_csv("charts/yearly_sales.csv")
+discount_analysis.to_csv("charts.csv")
+
+print("\nAll Analysis and Charts Completed Successfully!")
